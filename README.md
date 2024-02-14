@@ -18,7 +18,7 @@
 
 音源サイト<a href="https://cymatics.fm/pages/free-download-vault">Cymatics</a>には、無料でダウンロードできるヒップホップのドラムループ音源が多くあるので色々聴いてみて、好みのドラム音源をダウンロードしましょう。
 
-またポピュラー楽曲は使う音源にこだわりがなければ、<a href="https://dova-s.jp/#google_vignette">フリー音源サイト</a>で好みの歌唱を含む曲をダウンロードしましょう。使用したい歌唱を含む曲がある場合mp3、wav形式のオーディオファイルを用意してください。
+またポピュラー楽曲は使う音源にこだわりがなければ、<a href="https://dova-s.jp/#google_vignette">フリー音源サイト</a>で好みの歌唱を含む曲をダウンロードしましょう。使用したい歌唱を含む曲がある場合mp3、wavファイル形式のオーディオファイルを用意してください。
 
 #### 2. Google Colaboratoryを開いて準備をする
  
@@ -66,4 +66,7 @@ print(outname)
 ```
 
 os.path.basename()関数で、ファイル名のみを補完します。
-outname.replace()関数で、.mp3、.wav
+
+outname.replace()関数で、.mp3、.wavを削除したファイル名を補完します。
+pydub.AudioSegment.from_mp3()関数、pydub.AudioSegment.from_wav()関数で音声データを読み込み、export()関数で"ファイル名.wav"のシンプルなwavファイルを作成します。これで長いパス名を省略します。
+
