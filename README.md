@@ -14,15 +14,56 @@
 
 # ポピュラー楽曲の歌唱部分とヒップホップのドラム音源を合成しよう
 ## ポピュラー楽曲とドラム音源の用意
-　1.ドラム音源、使用したい曲のオーディオファイルがない場合、フリー音源サイトから歌唱を含む曲をダウンロードする
+#### 1. ドラム音源、使用したい曲のオーディオファイルがない場合、フリー音源サイトから歌唱を含む曲をダウンロードする
 
 音源サイト<a href="https://cymatics.fm/pages/free-download-vault">Cymatics</a>には、無料でダウンロードできるヒップホップのドラムループ音源が多くあるので色々聴いてみて、好みのドラム音源をダウンロードしましょう。
 
-ポピュラー楽曲は使う音源にこだわりがなければ、<a href="https://dova-s.jp/#google_vignette">フリー音源サイト</a>で歌唱を含む曲をダウンロードしましょう。
+またポピュラー楽曲は使う音源にこだわりがなければ、<a href="https://dova-s.jp/#google_vignette">フリー音源サイト</a>で好みの歌唱を含む曲をダウンロードしましょう。使用したい歌唱を含む曲がある場合mp3、wav形式のオーディオファイルを用意してください。
 
-　2.Google Colaboratoryを開いて準備をする
+#### 2. Google Colaboratoryを開いて準備をする
  
 まず初めに、自身のGoogleドライブに使用したい歌唱が含まれる曲、ヒップホップのドラム音源をアップロードしましょう。
 
 新しいGoogle Colaboratoryノートブックを開きましょう。開いたら、以下のコードでGoogleドライブをマウントします。
+```ruby
+from google.colab import drive
+drive.mount('/content/drive')
+```
 
+次に、使用するドラム音源のパスとファイル名にあるドラム音源のテンポを入力しましょう。
+```ruby
+filename_b = "" # @param {type:"string"}
+tempo_b =  #@param {type:"integer"}
+print(filename_b)
+```
+また、歌唱を含む曲のパスを入力しましょう。
+```ruby
+import os
+!pip install pydub
+import pydub
+from pydub import AudioSegment
+
+
+#@title 曲のパスを指定
+filename = "" #@param {type:"string"}
+
+#outname=パスのファイル名
+outname = os.path.basename(filename)
+outname = outname.replace(".mp3","")
+outname = outname.replace(".wav","")
+
+#ファイル名のwavファイルを作成
+if '.mp3' in filename:
+  sound = pydub.AudioSegment.from_mp3(filename)
+  sound.export(outname+".wav", format="wav")
+if '.wav' in filename:
+  sound = pydub.AudioSegment.from_wav(filename)
+  sound.export(outname+".wav", format="wav")
+filename = outname+".wav"
+filename_s =filename
+print(filename)
+print(outname)
+```
+
+os.path.basename()関数で、ファイル名のみを補完します。
+outname.replace()関数で、.mp3、.wav
