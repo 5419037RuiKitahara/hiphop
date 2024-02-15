@@ -15,13 +15,13 @@
 
 # ポピュラー楽曲の歌唱部分とヒップホップのドラム音源を合成しよう
 ## ポピュラー楽曲とドラム音源の用意
-#### 1. ドラム音源、使用したい曲のオーディオファイルがない場合、フリー音源サイトから歌唱を含む曲をダウンロードする
+#### ドラム音源、使用したい曲のオーディオファイルがない場合、フリー音源サイトから歌唱を含む曲をダウンロードする
 
 音源サイト<a href="https://cymatics.fm/pages/free-download-vault">Cymatics</a>には、無料でダウンロードできるヒップホップのドラムループ音源が多くあるので色々聴いてみて、好みのドラム音源をダウンロードしましょう。
 
 またポピュラー楽曲は使う音源にこだわりがなければ、<a href="https://dova-s.jp/#google_vignette">フリー音源サイト</a>で好みの歌唱を含む曲をダウンロードしましょう。使用したい歌唱を含む曲がある場合mp3、wavファイル形式のオーディオファイルを用意してください。
 
-#### 2. Google Colaboratoryを開いて準備をする
+#### Google Colaboratoryを開いて準備をする
  
 まず初めに、自身のGoogleドライブに使用したい歌唱が含まれる曲、ヒップホップのドラム音源をアップロードしましょう。
 
@@ -160,7 +160,7 @@ print(beat_start)
 # 歌声の直前までの無音を消去
 
 
-sound = AudioSegment.from_file(voice_name)
+sound = AudioSegment.from_file("/content/output/"+outname+"/vocals.wav")
 sound1 = sound[beat_start:] #歌声部分[開始,終了]
 sound1.export("voice1.wav", format="wav")
 voice_name_c="voice1.wav"
@@ -191,6 +191,7 @@ def silent_plus(duration,filename):
 ```
 ## ドラムと歌唱を合成
 ```py
+tempo_change("voice1.wav")
 silent_plus(0,filename_b)
 # 歌唱とドラムを合成
 sound1 = AudioSegment.from_file("drum.wav") #ドラム
