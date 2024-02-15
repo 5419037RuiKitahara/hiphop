@@ -25,26 +25,26 @@
 まず初めに、自身のGoogleドライブに使用したい歌唱が含まれる曲、ヒップホップのドラム音源をアップロードしましょう。
 
 新しいGoogle Colaboratoryノートブックを開きましょう。開いたら、以下のコードでGoogleドライブをマウントします。
-```ruby
+```py
 from google.colab import drive
 drive.mount('/content/drive')
 ```
 
 次に、使用するドラム音源のパスとファイル名にあるドラム音源のテンポを入力しましょう。
-```ruby
+```py
 filename_b = "" # @param {type:"string"}
 tempo_b =  #@param {type:"integer"}
 print(filename_b)
 ```
 また、歌唱を含む曲のパスを入力しましょう。
-```ruby
+```py
 import os
 !pip install pydub
 import pydub
 from pydub import AudioSegment
 
 
-#@title 曲のパスを指定
+#曲のパスを指定
 filename = "" #@param {type:"string"}
 
 #outname=パスのファイル名
@@ -72,16 +72,132 @@ pydub.AudioSegment.from_mp3()関数、pydub.AudioSegment.from_wav()関数で音�
 
 ## 編曲したい曲のテンポを推定
 
-librosaを用いて、テンポの推定を行います。
+librosaを用いて、テンポ、ビート時刻の推定を行います。
+```py
+import librosa
+def tempo_estimate(filename):
+  y, sr = librosa.load(filename)
+  tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+  return tempo
+```
+```py
+def beat_estimate(filename):
+  y, sr = librosa.load(filename)
+  tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+  beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+  return beat_times
+```
 この時、次の音源分離の際に普通の音源ファイル名のままだとエラーが発生するため、原曲の最初のビート時刻から始まる「new.wav」を作ります。
-
+```py
+tempo = tempo_estimate(filename)
+beat_times = beat_estimate(filename_s)
+if tempo>170:
+  tempo =tempo/2
+sound = AudioSegment.from_file(filename)
+sound1 = sound[beat_times[0]:]
+sound1.export("new.wav", format="wav")
+filename = "new.wav"
+print(tempo)
+```
 ## 歌唱部分の抽出
 Spleeterを用いて音源抽出を行います。
+```py
 
+!pip install spleeter
+
+def sound_separation(filename):
+  #Spleeterを使用し歌声部分とその他を分離
+  !spleeter separate -h
+  !spleeter separate -o output/ {filename}
+```
+このままだとファイル名がnewのままなので名前を変えます。
+```py
+sound_separation("new.wav")
+os.rename("/content/output/new", "/content/output/"+outname)
+```
 ## 歌唱の最初の位置を検出
+```py
+!pip install inaSpeechSegmenter
+!pip install pydub
+from inaSpeechSegmenter import Segmenter
 
+def vocal_detection(filename):
+  seg = Segmenter(vad_engine='smn', detect_gender=False)
+  # 区間検出実行（たったこれだけでOK）
+  segmentation = seg(filename)
+  speech_segment_index = 0
+  start_time = 0
+  for segment in segmentation:
+    segment_label = segment[0]
+    i = 0
+    if (segment_label == 'speech'):  # 音声区間
+        start_time = segment[1] * 1000
+        print(start_time)
+        break
+  return start_time
+```
+音声区間検出ライブラリinaSpeechSegmenterを用いて音声区間の最初の位置を検出します。
+```py
+start = vocal_detection("/content/output/"+outname+"/vocals.wav")
+```
 ## 歌唱直前のビート時刻を計測し、分割
+beat_framesをlibrosa.frames_to_time()関数で時間に直します。
+```py
+#歌声直前のビート時刻計測
+beat_times = beat_estimate(filename_s)
+beat_start = 0
+i = 0
+for b in beat_times:
+  b = beat_times*1000
+  if b[0] > start:
+    beat_start = b[0]
+  if b[i]<=start :
+    beat_start = b[i]
+  i+=1
+print(beat_start)
 
+# 歌声の直前までの無音を消去
+
+
+sound = AudioSegment.from_file(voice_name)
+sound1 = sound[beat_start:] #歌声部分[開始,終了]
+sound1.export("voice1.wav", format="wav")
+voice_name_c="voice1.wav"
+```
+
+ビート時刻から歌声直前のビート時刻を探し、歌唱をその位置から開始するようにします。
 ## テンポを変更
+```py
+# テンポを変更
 
+import soundfile as sf
+
+def tempo_change(filename):
+  y, sr = librosa.load(filename)
+  tempo=tempo_estimate(filename_s)
+  y_new  = librosa.effects.time_stretch(y, rate=tempo_b/tempo)
+  sf.write("tc.wav", y_new, sr, subtype="PCM_24")
+```
 ## ドラムの前に無音区間を追加
+```py
+#ドラムパターンに無音部分を追加
+def silent_plus(duration,filename):
+  a = AudioSegment.silent(duration=duration)
+  b = AudioSegment.from_file(filename)
+  b = b*30
+  c = a + b
+  c.export("drum.wav",format="wav")
+```
+## ドラムと歌唱を合成
+```py
+silent_plus(0,filename_b)
+# 歌唱とドラムを合成
+sound1 = AudioSegment.from_file("drum.wav") #ドラム
+sound2 = AudioSegment.from_file("tc.wav")#歌声
+output_last =sound1.overlay(sound2,position=0)
+# save the result
+output_last.export(outname+"_mixed.wav", format="wav")
+```
+
+#おわりに
+librosaのテンポが合っていないと、歌唱とドラムのタイミングを合わせるのは難しいと思うので、<a href="https://vocalremover.org/ja/key-bpm-finder">外部webサイト</a>で実際のテンポを調べると合わせやすいです。
